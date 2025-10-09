@@ -33,38 +33,36 @@ class RadiologyDataset:
     def preprocess_function(self, examples):
         """
         Preprocessing function for tokenizing the dataset.
-        
-        Args:
-            examples: Batch of examples from the dataset
-            
-        Returns:
-            dict: Tokenized inputs with labels
+        Ensures that tokenized labels are properly set for T5 training.
         """
-        # Extract the source (radiology report) and target (layman summary) texts
-        inputs = examples["radiology_report"]   # Source: original radiology report
-        targets = examples["layman_report"]     # Target: simplified layman report
-        
-        # Tokenize the input radiology reports
+        inputs = examples["radiology_report"]   # 原文报告
+        targets = examples["layman_report"]     # 简化摘要
+
+        # 对输入文本进行 tokenization
         model_inputs = self.tokenizer(
             inputs,
-            max_length=512,          # Limit input length to 512 tokens
-            padding=False,           # No padding here (will be done later in DataCollator)
-            truncation=True          # Truncate texts longer than max_length
+            max_length=512,
+            padding=False,   # 不在这里 padding
+            truncation=True
         )
 
-        # Tokenize the target layman summaries
+        # 对目标文本进行 tokenization，确保不全是 -100
         labels = self.tokenizer(
             targets,
-            max_length=256,          # Shorter max length for targets (summaries)
-            padding=False,           # No padding for labels
-            truncation=True          # Truncate long summaries
-        )
+            max_length=256,
+            padding=False,
+            truncation=True
+        )["input_ids"]
 
-        # Add tokenized target IDs as labels for the model
-        model_inputs["labels"] = labels["input_ids"]
+        # 只将 pad token 设置为 -100，其他保留
+        labels = [
+            [(l if l != self.tokenizer.pad_token_id else -100) for l in label_seq]
+            for label_seq in labels
+        ]
 
+        model_inputs["labels"] = labels
         return model_inputs
-    
+
     def get_tokenized_datasets(self):
         """
         Apply tokenization to the entire dataset.
