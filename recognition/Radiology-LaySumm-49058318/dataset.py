@@ -8,18 +8,38 @@ logger = logging.getLogger(__name__)
 class RadiologyDataset:
     """
     Dataset class for handling radiology report simplification data.
-    Loads and preprocesses the BioLaySumm dataset for training.
+    
+    This class manages the loading, preprocessing, and tokenization of the BioLaySumm dataset
+    for training sequence-to-sequence models on radiology report simplification tasks.
+    
+    Attributes:
+        tokenizer: Hugging Face tokenizer for text processing
+        dataset: Loaded dataset object containing train/validation/test splits
     """
     
     def __init__(self, model_name="google/flan-t5-base"):
-        """Initialize the dataset with tokenizer for the specified model."""
+        """
+        Initialize the dataset with tokenizer for the specified model.
+        
+        Args:
+            model_name (str): Name of the pre-trained model to use for tokenization.
+                            Defaults to "google/flan-t5-base".
+        """
         # Load tokenizer for the specified model
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         # Placeholder for the dataset - will be loaded later
         self.dataset = None
     
     def load_data(self):
-        """Load BioLaySumm dataset from Hugging Face Hub."""
+        """
+        Load BioLaySumm dataset from Hugging Face Hub.
+        
+        Returns:
+            DatasetDict: Loaded dataset with train/validation/test splits
+            
+        Raises:
+            Exception: If dataset loading fails
+        """
         logger.info("Loading BioLaySumm dataset...")
         try:
             # Load the dataset from Hugging Face dataset hub
@@ -33,28 +53,38 @@ class RadiologyDataset:
     def preprocess_function(self, examples):
         """
         Preprocessing function for tokenizing the dataset.
-        Ensures that tokenized labels are properly set for T5 training.
+        
+        This function tokenizes both input radiology reports and target layman summaries,
+        and prepares the labels for sequence-to-sequence training with proper masking.
+        
+        Args:
+            examples (dict): Batch of examples containing 'radiology_report' and 'layman_report'
+            
+        Returns:
+            dict: Tokenized inputs with labels ready for model training
         """
-        inputs = examples["radiology_report"]   # 原文报告
-        targets = examples["layman_report"]     # 简化摘要
+        # Extract source and target texts from the batch
+        inputs = examples["radiology_report"]   # Original radiology reports
+        targets = examples["layman_report"]     # Simplified layman summaries
 
-        # 对输入文本进行 tokenization
+        # Tokenize input texts (radiology reports)
         model_inputs = self.tokenizer(
             inputs,
-            max_length=512,
-            padding=False,   # 不在这里 padding
-            truncation=True
+            max_length=512,    # Maximum sequence length for inputs
+            padding=False,     # Defer padding to data collator
+            truncation=True    # Truncate sequences longer than max_length
         )
 
-        # 对目标文本进行 tokenization，确保不全是 -100
+        # Tokenize target texts (layman summaries)
         labels = self.tokenizer(
             targets,
-            max_length=256,
-            padding=False,
-            truncation=True
+            max_length=256,    # Maximum sequence length for targets
+            padding=False,     # Defer padding to data collator
+            truncation=True    # Truncate sequences longer than max_length
         )["input_ids"]
 
-        # 只将 pad token 设置为 -100，其他保留
+        # Replace padding tokens with -100 for loss calculation
+        # -100 is ignored by the loss function in PyTorch
         labels = [
             [(l if l != self.tokenizer.pad_token_id else -100) for l in label_seq]
             for label_seq in labels
@@ -66,6 +96,9 @@ class RadiologyDataset:
     def get_tokenized_datasets(self):
         """
         Apply tokenization to the entire dataset.
+        
+        This method processes all dataset splits (train/validation/test) through
+        the preprocessing function and returns tokenized versions ready for training.
         
         Returns:
             DatasetDict: Tokenized datasets for train/validation/test splits
@@ -85,16 +118,16 @@ class RadiologyDataset:
     
     def get_dataset_info(self):
         """
-        Get basic information about the dataset.
+        Get basic information and statistics about the dataset.
         
         Returns:
-            dict: Dataset statistics including sample counts and columns
+            dict: Dataset statistics including sample counts and column names
         """
         # Load data if not already loaded
         if self.dataset is None:
             self.load_data()
         
-        # Compile dataset information
+        # Compile dataset information and statistics
         info = {
             "train_samples": len(self.dataset["train"]),          # Number of training samples
             "validation_samples": len(self.dataset["validation"]), # Number of validation samples
@@ -105,12 +138,16 @@ class RadiologyDataset:
 
 def create_dataset(model_name="google/flan-t5-base"):
     """
-    Factory function to create dataset instance.
+    Factory function to create and initialize a RadiologyDataset instance.
+    
+    This function provides a convenient interface for creating dataset instances
+    with the specified tokenizer configuration.
     
     Args:
-        model_name (str): Name of the model to use for tokenization
-        
+        model_name (str): Name of the pre-trained model to use for tokenization.
+                        Defaults to "google/flan-t5-base".
+                        
     Returns:
-        RadiologyDataset: Initialized dataset instance
+        RadiologyDataset: Initialized dataset instance ready for data loading
     """
     return RadiologyDataset(model_name)
