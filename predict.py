@@ -9,20 +9,20 @@ import evaluate
 
 # ==== CONFIGURATION ====
 BASE_MODEL = "google/flan-t5-base"  # Base model name
-ADAPTER_PATH = "./radiology-simplifier-output"  # Path to fine-tuned adapter
-OUTPUT_FILE = "biolaysumm_validation_results.csv"  # CSV output file
-MAX_INPUT = 512  # Maximum input token length
-MAX_OUTPUT = 256  # Maximum output token length
-BATCH_SIZE = 4  # Batch size for generation
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"  # Device selection
-NUM_EXAMPLES = 5  # Number of representative examples to print
+ADAPTER_PATH = "./radiology-simplifier-output"  # Path to fine-tuned adapter weights
+OUTPUT_FILE = "biolaysumm_validation_results.csv"  # Output CSV file name
+MAX_INPUT_LENGTH = 512  # Maximum token length for input reports
+MAX_OUTPUT_LENGTH = 256  # Maximum token length for generated summaries
+BATCH_SIZE = 4  # Batch size for inference
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"  # Use GPU if available
+NUM_EXAMPLES = 5  # Number of representative examples to display
 # =======================
 
 # Load the BioLaySumm validation dataset
 print("🔹 Loading BioLaySumm validation set...")
 dataset = load_dataset("BioLaySumm/BioLaySumm2025-LaymanRRG-opensource-track", split="validation")
 
-# Load tokenizer and model (with PEFT adapter)
+# Load tokenizer and base model with PEFT adapter
 print("🔹 Loading model and tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
 base_model = AutoModelForSeq2SeqLM.from_pretrained(BASE_MODEL)
@@ -35,39 +35,44 @@ print("🔹 Generating predictions on validation set...")
 predictions, references, reports = [], [], []
 
 for i in tqdm(range(0, len(dataset), BATCH_SIZE)):
-    # Extract the batch of radiology reports and layman references
+    # Extract batch of radiology reports and corresponding layman summaries
     batch_reports = dataset[i:i+BATCH_SIZE]["radiology_report"]
     batch_refs = dataset[i:i+BATCH_SIZE]["layman_report"]
     reports.extend(batch_reports)
     references.extend(batch_refs)
 
-    # Tokenize the batch of input reports
-    inputs = tokenizer(batch_reports, return_tensors="pt", padding=True, truncation=True, max_length=MAX_INPUT).to(DEVICE)
+    # Tokenize input reports with padding and truncation
+    inputs = tokenizer(
+        batch_reports, 
+        return_tensors="pt", 
+        padding=True, 
+        truncation=True, 
+        max_length=MAX_INPUT_LENGTH
+    ).to(DEVICE)
 
-    # Generate summaries without gradient computation
+    # Generate summaries without gradient computation for efficiency
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
-            max_length=MAX_OUTPUT,
-            num_beams=4,  # Beam search
-            early_stopping=True
+            max_length=MAX_OUTPUT_LENGTH,
+            num_beams=4,  # Use beam search for better quality
+            early_stopping=True  # Stop generation when all beams have finished
         )
 
-    # Decode generated token IDs to strings
+    # Decode generated token IDs back to text
     decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)
     predictions.extend(decoded)
 
 # ==== Compute ROUGE scores ====
 rouge = evaluate.load("rouge")
 rouge_scores = rouge.compute(predictions=predictions, references=references, use_stemmer=True)
-rouge_scores = {k: v*100 for k, v in rouge_scores.items()}  # Convert to percentage
 
-# Print ROUGE scores individually in official format
+# Print ROUGE scores in official 0-1 scale format
 print("\n✅ ROUGE Scores on Validation Set:")
-print(f"ROUGE-1: {rouge_scores.get('rouge1', 0):.2f}")
-print(f"ROUGE-2: {rouge_scores.get('rouge2', 0):.2f}")
-print(f"ROUGE-L: {rouge_scores.get('rougeL', 0):.2f}")
-print(f"ROUGE-Lsum: {rouge_scores.get('rougeLsum', 0):.2f}")
+print(f"ROUGE-1: {rouge_scores.get('rouge1', 0):.4f}")
+print(f"ROUGE-2: {rouge_scores.get('rouge2', 0):.4f}")
+print(f"ROUGE-L: {rouge_scores.get('rougeL', 0):.4f}")
+print(f"ROUGE-Lsum: {rouge_scores.get('rougeLsum', 0):.4f}")
 
 # ==== Save results to CSV ====
 print("\n💾 Saving validation results CSV...")
