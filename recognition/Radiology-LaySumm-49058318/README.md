@@ -126,6 +126,8 @@ Wrap original reports in instruction format:
 #### Label processing:  
 Use "layman_report" directly as the training target to ensure that the model learns to map from professional terms to plain language expressions.
 ## 5. Example Inputs and Outputs
+Algorithem picture:
+<img width="1089" height="204" alt="image" src="https://github.com/user-attachments/assets/68e9c4fc-4b1e-43b7-b689-1cef2a621035" />
 Example 1:  
 Radiology Report: The chest shows significant air trapping. Bilateral apical chronic changes are present. Dorsal kyphosis is noted. No evidence of pneumothorax.  
 Reference Lay Summary: The chest shows a large amount of trapped air. There are long-term changes at the top of both lungs. The upper back is curved outward. There is no sign of air in the space around the lungs.    
@@ -212,8 +214,55 @@ Solutions:
 Apply model quantization and pruning techniques  
 Optimize batch processing and caching mechanisms  
 Explore hardware acceleration solutions
+## 7.Training Information
+### 7.1 Hardware Configuration
+GPU: NVIDIA RTX5060 laptop  
+VRAM: 8GB  
+CPU: 13th Gen Intel(R) Core(TM) i7-13700HX  
+RAM: 16X2 32GB 4800MT/S DDR5  
+Storage: 1TB    
+#### Configuration
+<img width="998" height="277" alt="image" src="https://github.com/user-attachments/assets/f21f3b73-3aec-4adb-9507-ff75f985b1cd" />  
+LoRA rank (r): 16  
+LoRA Alpha: 32  
+LoRA Dropout: 0.1  
+Target modules: ["q", "v"]  
+Total parameter quantity: 249,347,328  
+Number of trainable parameters: 1,769,472  
+Parameter training ratio: 0.71%  
+Number of training rounds: 10 epoch  
+Batch size: 4  
+Learning rate: 5e-5  
+Weight decay: 0.01  
+Preheating steps: 10  
+Gradient clipping: 0.5  
+Input length: 512 tokens     
+Output length: 256 tokens  
+train_runtime: 57782.5212(16h), train_samples_per_second: 26.038, train_steps_per_second: 6.51, train_loss: 0.8983025245932217(from 2.96 to 0.7), epoch: 10.0
+## 8. Usage Instructions
+### 8.1 Environment
+Python 3.11.13  
+PyTorch: 2.9.0.dev20250810+cu128  
+CUDA: 12.8   
+#### Install dependencies
+torch>=2.0.0  
+transformers>=4.30.0  
+datasets>=2.12.0  
+accelerate>=0.20.0  
+peft>=0.4.0  
+bitsandbytes>=0.40.0  
+rouge-score>=0.1.2  
+nltk>=3.8.0  
+numpy>=1.24.0  
+pandas>=1.5.0  
+tqdm>=4.64.0  
+       pip install -r requirements.txt
+### 8.2 Train the Model
+       python train.py
+### 8.3 Run Inference
+       python predict.py
 
-## 10.References
+## 9.References
 1. T5 Model  
 Raffel, C., Shazeer, N., Roberts, A., Lee, K., Narang, S., Matena, M., Zhou, Y., Li, W., & Liu, P. J. (2020).  
 Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer.  
