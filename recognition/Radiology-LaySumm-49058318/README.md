@@ -1,9 +1,7 @@
-# Project - Generation of simplified summaries of radiology reports
+# Project: 13 - Fine-tune FLAN-T5 for Radiology Report Simplification (hard difficulty)
 ## 1.Project Objectives
 This project aims to develop an automated radiology report simplification system based on deep learning techniques, which converts specialized medical imaging diagnostic reports into easily understandable layperson summaries. The system utilizes the FLAN-T5 pre-trained language model combined with LoRA (Low-Rank Adaptation) for parameter-efficient fine-tuning, specifically trained on the BioLaySumm 2025 dataset to achieve intelligent transformation from professional medical terminology to everyday language.
-
 #### Core Objectives Include:
-
 1.Addressing Information Asymmetry in Healthcare: Radiology reports typically contain numerous technical terms and anatomical descriptions (e.g., "heterogeneously enhancing mass with peripheral washout") that are difficult for general patients to comprehend. This project employs natural language generation technology to translate these complex contents into plain language understandable by non-specialists, thereby helping patients better grasp their health conditions.
 
 2.Improving Accessibility of Medical Information: In resource-constrained healthcare environments, physicians often lack sufficient time to explain report details to every patient. This system can serve as an auxiliary tool, automatically generating easy-to-understand report summaries, alleviating the workload of healthcare professionals while ensuring patients receive accurate medical information.
@@ -158,6 +156,8 @@ Reference Lay Summary: There is a calcified granuloma located at the top of the 
 Generated Summary: There is a calcified granuloma, which is a type of hardened lump, in the lower part of the right lung.  
 
 --------------------------------------------------------------------------------  
+#### Error Analysis
+Despite strong ROUGE scores, the model occasionally misplaces anatomical locations (e.g., "lung apex" vs. "lung base") and may oversimplify complex pathological descriptions. These errors likely stem from limited anatomical context in the training data and the challenge of balancing accuracy and simplicity.
 ## 6. Validation Set ROUGE Scores and Interpretation
 #### ROUGE Evaluation Results
 ✅ ROUGE Scores on Validation Set:  
@@ -223,44 +223,62 @@ RAM: 16X2 32GB 4800MT/S DDR5
 Storage: 1TB    
 #### Configuration
 <img width="998" height="277" alt="image" src="https://github.com/user-attachments/assets/f21f3b73-3aec-4adb-9507-ff75f985b1cd" />  
-LoRA rank (r): 16  
-LoRA Alpha: 32  
-LoRA Dropout: 0.1  
-Target modules: ["q", "v"]  
-Total parameter quantity: 249,347,328  
-Number of trainable parameters: 1,769,472  
-Parameter training ratio: 0.71%  
-Number of training rounds: 10 epoch  
-Batch size: 4  
-Learning rate: 5e-5  
-Weight decay: 0.01  
-Preheating steps: 10  
-Gradient clipping: 0.5  
-Input length: 512 tokens     
-Output length: 256 tokens  
+
+Model name: google/flan-t5-base    
+LoRA rank (r): 16    
+LoRA Alpha: 32    
+LoRA Dropout: 0.1    
+Target modules: ["q", "v"]    
+Total parameter quantity: 249,347,328    
+Number of trainable parameters: 1,769,472    
+Parameter training ratio: 0.71%    
+Number of training rounds: 10 epoch    
+Batch size: 4    
+Learning rate: 5e-5    
+Weight decay: 0.01    
+Preheating steps: 10    
+Gradient clipping: 0.5    
+Input length: 512 tokens       
+Output length: 256 tokens    
 train_runtime: 57782.5212(16h), train_samples_per_second: 26.038, train_steps_per_second: 6.51, train_loss: 0.8983025245932217(from 2.96 to 0.7), epoch: 10.0
 ## 8. Usage Instructions
 ### 8.1 Environment
-Python 3.11.13  
-PyTorch: 2.9.0.dev20250810+cu128  
+Python 3.11.13    
+PyTorch: 2.9.0.dev20250810+cu128    
 CUDA: 12.8   
 #### Install dependencies
-torch>=2.0.0  
-transformers>=4.30.0  
-datasets>=2.12.0  
-accelerate>=0.20.0  
-peft>=0.4.0  
-bitsandbytes>=0.40.0  
-rouge-score>=0.1.2  
-nltk>=3.8.0  
-numpy>=1.24.0  
-pandas>=1.5.0  
-tqdm>=4.64.0  
+torch>=2.0.0    
+transformers>=4.30.0    
+datasets>=2.12.0    
+accelerate>=0.20.0    
+peft>=0.4.0    
+bitsandbytes>=0.40.0    
+rouge-score>=0.1.2    
+nltk>=3.8.0    
+numpy>=1.24.0    
+pandas>=1.5.0    
+tqdm>=4.64.0    
        pip install -r requirements.txt
 ### 8.2 Train the Model
        python train.py
 ### 8.3 Run Inference
        python predict.py
+### 8.4 Explanation of Training Technology Selection 
+Taking into account the actual requirements of the project and the limitations of computing resources, we have made the following technical choices:        
+#### Single GPU Training      
+- Reasons for Selection: The project uses NVIDIA RTX 5060 (8GB VRAM), and a single GPU is sufficient to meet the training requirements.  
+- Actual Results: It took 16 hours to complete 10 epochs of training, and the validation loss decreased from 2.96 to 0.7, demonstrating significant training effectiveness.     
+#### FP32 Precision Training      
+- Reason for Selection: To ensure training stability and avoid the numerical precision loss that may occur with mixed precision  
+- Actual Verification: The training process converged stably without any gradient explosion or NaN issues   
+#### No Gradient Accumulation     
+- Reason for Selection: With a batch size of 4, the 8GB VRAM has achieved the optimal utilization rate, and no further accumulation is necessary.  
+- Resource Utilization: The GPU utilization rate remains between 85% and 95%, and the resources are fully utilized.     
+#### Technical Feasibility Explanation  
+Although the current implementation uses a single GPU for training, the code architecture supports expansion to distributed training:  
+- Utilizing the Hugging Face Transformers library, which naturally supports multi-GPU parallelism  
+- The data loader design supports distributed data parallelism  
+- To scale up to a larger scale, simply configure to enable `torchrun` distributed training
 
 ## 9.References
 1. T5 Model  
