@@ -2,13 +2,13 @@
 ## 1.Project Objectives
 This project aims to develop an automated radiology report simplification system based on deep learning techniques, which converts specialized medical imaging diagnostic reports into easily understandable layperson summaries. The system utilizes the FLAN-T5 pre-trained language model combined with LoRA (Low-Rank Adaptation) for parameter-efficient fine-tuning, specifically trained on the BioLaySumm 2025 dataset to achieve intelligent transformation from professional medical terminology to everyday language.
 #### Core Objectives Include:
-1.Addressing Information Asymmetry in Healthcare: Radiology reports typically contain numerous technical terms and anatomical descriptions (e.g., "heterogeneously enhancing mass with peripheral washout") that are difficult for general patients to comprehend. This project employs natural language generation technology to translate these complex contents into plain language understandable by non-specialists, thereby helping patients better grasp their health conditions.
+- Addressing Information Asymmetry in Healthcare: Radiology reports typically contain numerous technical terms and anatomical descriptions (e.g., "heterogeneously enhancing mass with peripheral washout") that are difficult for general patients to comprehend. This project employs natural language generation technology to translate these complex contents into plain language understandable by non-specialists, thereby helping patients better grasp their health conditions.
 
-2.Improving Accessibility of Medical Information: In resource-constrained healthcare environments, physicians often lack sufficient time to explain report details to every patient. This system can serve as an auxiliary tool, automatically generating easy-to-understand report summaries, alleviating the workload of healthcare professionals while ensuring patients receive accurate medical information.
+- Improving Accessibility of Medical Information: In resource-constrained healthcare environments, physicians often lack sufficient time to explain report details to every patient. This system can serve as an auxiliary tool, automatically generating easy-to-understand report summaries, alleviating the workload of healthcare professionals while ensuring patients receive accurate medical information.
 
-3.Exploring Text Simplification Techniques in Specialized Domains: Radiology reports possess specific linguistic structures and specialized vocabulary systems. This project investigates how to perform effective transfer learning on such highly specialized texts, providing technical references for text simplification in other professional domains (e.g., legal documents, scientific papers).
+- Exploring Text Simplification Techniques in Specialized Domains: Radiology reports possess specific linguistic structures and specialized vocabulary systems. This project investigates how to perform effective transfer learning on such highly specialized texts, providing technical references for text simplification in other professional domains (e.g., legal documents, scientific papers).
 
-4.Implementing Parameter-Efficient Fine-Tuning Strategies: By employing LoRA technology, the project significantly reduces the number of trainable parameters (from approximately 250 million parameters to only about 2.5% being trained) while maintaining model performance, exploring the feasibility of customizing domain-specific models under limited computational resources.
+- Implementing Parameter-Efficient Fine-Tuning Strategies: By employing LoRA technology, the project significantly reduces the number of trainable parameters (from approximately 250 million parameters to only about 2.5% being trained) while maintaining model performance, exploring the feasibility of customizing domain-specific models under limited computational resources.
 
 This project's technical solution directly addresses the practical needs of the ACL 2025 BioLaySumm Workshop, providing a comprehensive end-to-end solution for practical applications in medical natural language processing, including complete pipeline implementation from data preprocessing and model training to performance evaluation and deployment inference.
 ## 2. Algorithm Principles
@@ -18,13 +18,13 @@ This project is based on the FLAN-T5 (Fine-tuned LAnguage Net - Text-to-Text Tra
 
 #### Core Architectural Components:
 
-1.Encoder-Decoder Structure: Employs the standard Transformer encoder-decoder architecture, where the encoder processes input expert radiology reports and the decoder generates simplified layperson summaries.
+- Encoder-Decoder Structure: Employs the standard Transformer encoder-decoder architecture, where the encoder processes input expert radiology reports and the decoder generates simplified layperson summaries.
 
-2.Relative Position Encoding: Utilizes T5's relative position bias mechanism instead of traditional absolute position encoding, providing better handling of long text sequences.
+- Relative Position Encoding: Utilizes T5's relative position bias mechanism instead of traditional absolute position encoding, providing better handling of long text sequences.
 
-3.Text-to-Text Unified Framework: Unifies all natural language processing tasks into a text-to-text transformation format, with inputs formatted as "Simplify the following medical report: [original text]" and outputs as simplified layperson versions.
+- Text-to-Text Unified Framework: Unifies all natural language processing tasks into a text-to-text transformation format, with inputs formatted as "Simplify the following medical report: [original text]" and outputs as simplified layperson versions.
 
-4.Prefix Language Modeling: Prepends task-specific prefix text to encoder inputs, guiding the model to perform the specific text simplification task.
+- Prefix Language Modeling: Prepends task-specific prefix text to encoder inputs, guiding the model to perform the specific text simplification task.
 
 #### LoRA Fine-tuning Mechanism:  
 This project employs LoRA (Low-Rank Adaptation) for parameter-efficient fine-tuning, based on the mathematical principle of low-rank matrix decomposition: 
@@ -48,11 +48,11 @@ Addition operation: Combines original capabilities with task-specific knowledge 
 
 The advantages of this design include:
 
-1.Parameter Efficiency: Only requires training low-rank matrices A and B, significantly reducing the number of trainable parameters
+- Parameter Efficiency: Only requires training low-rank matrices A and B, significantly reducing the number of trainable parameters
 
-2.Knowledge Preservation: Keeps original weights W₀ unchanged, avoiding catastrophic forgetting
+- Knowledge Preservation: Keeps original weights W₀ unchanged, avoiding catastrophic forgetting
 
-3.Flexible Deployment: BA can be merged back into W₀ during inference, without adding inference latency
+- Flexible Deployment: BA can be merged back into W₀ during inference, without adding inference latency
 
 By injecting these trainable adapters into the Query and Value projection layers of the Transformer, the number of parameters requiring training is reduced from 100% to only about 2.5%.
 
@@ -69,11 +69,11 @@ where x represents the input expert report and y represents the target layperson
 
 #### Multi-stage Training Pipeline:
 
-1.Instruction-aware Pre-training: Leverages FLAN-T5's pre-trained prior knowledge from multiple instruction-based tasks
+- Instruction-aware Pre-training: Leverages FLAN-T5's pre-trained prior knowledge from multiple instruction-based tasks
 
-2.Domain Adaptation Fine-tuning: Conducts domain-specific adaptive training on medical text data
+- Domain Adaptation Fine-tuning: Conducts domain-specific adaptive training on medical text data
 
-3.Task Specialization Training: Performs end-to-end training specifically for the radiology report simplification task
+- Task Specialization Training: Performs end-to-end training specifically for the radiology report simplification task
 
 #### Optimization Methodology:
 
@@ -113,10 +113,10 @@ layman_report: Simplified layperson version summary (target text)
 Other metadata fields: Report ID, source institution, and other auxiliary information  
 ### 4.3 Data Preprocessing Pipeline
 #### Text Cleaning Steps:  
-1.Remove special characters and excess whitespace  
-2.Standardize text encoding format (UTF-8)  
-3.Handle consistency of medical abbreviations and terminology  
-Input Formatting:  
+- Remove special characters and excess whitespace  
+- Standardize text encoding format (UTF-8)    
+- Handle consistency of medical abbreviations and terminology    
+Input Formatting:    
 Wrap original reports in instruction format:
 
 "Simplify the following medical report: [radiology_report]"
