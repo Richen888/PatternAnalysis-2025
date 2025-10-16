@@ -262,6 +262,7 @@ tqdm>=4.64.0
 ### 8.2 Train the Model
        python train.py
 ### 8.3 Run Inference
+After training, run the following to verify ROUGE scores:  
        python predict.py
 ### 8.4 Explanation of Training Technology Selection 
 Taking into account the actual requirements of the project and the limitations of computing resources, we have made the following technical choices:        
