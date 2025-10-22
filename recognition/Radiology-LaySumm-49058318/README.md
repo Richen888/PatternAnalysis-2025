@@ -1,4 +1,6 @@
 # Project: 13 - Fine-tune FLAN-T5 for Radiology Report Simplification (hard difficulty)
+name: Changjiong He  
+studentID: 49058318
 ## 1.Project Objectives
 This project aims to develop an automated radiology report simplification system based on deep learning techniques, which converts specialized medical imaging diagnostic reports into easily understandable layperson summaries. The system utilizes the FLAN-T5 pre-trained language model combined with LoRA (Low-Rank Adaptation) for parameter-efficient fine-tuning, specifically trained on the BioLaySumm 2025 dataset to achieve intelligent transformation from professional medical terminology to everyday language.
 #### Core Objectives Include:
